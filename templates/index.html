@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Recommender</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons for a nicer spinner if preferred, or stick with SVG -->
+    <script src="https://unpkg.com/@phosphor-icons/web@2.1.1/dist/phosphor.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(to right, #6d28d9, #4c1d95); /* Deeper purple gradient */
+            color: #e2e8f0; /* Light text for contrast */
+        }
+        .main-header {
+            font-size: 3.5rem; /* Larger font size */
+            text-align: center;
+            color: #a78bfa; /* Lighter purple for header */
+            margin-bottom: 2.5rem; /* More space */
+            font-weight: 800; /* Extra bold */
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.2);
+            letter-spacing: -0.05em; /* Slightly tighter spacing */
+        }
+        .container {
+            max-width: 1024px; /* Slightly wider container */
+            background-color: #1a202c; /* Darker background for the card */
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4); /* Stronger shadow */
+            padding: 3rem; /* More padding */
+        }
+        /* Custom styling for select box */
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='currentColor'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.5em 1.5em;
+            background-color: #2d3748; /* Darker input background */
+            color: #e2e8f0; /* Light text color */
+            border: 1px solid #4a5568; /* Subtle border */
+        }
+        select:focus {
+            outline: none;
+            border-color: #a78bfa; /* Highlight on focus */
+            box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.5); /* Ring effect */
+        }
+        .recommend-button {
+            background: linear-gradient(to right, #4ade80, #16a34a); /* Green gradient button */
+            transition: all 0.3s ease-in-out;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+            font-weight: 700;
+        }
+        .recommend-button:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 20px -5px rgba(0, 0, 0, 0.3), 0 6px 10px -3px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(to right, #22c55e, #15803d);
+        }
+        .recommend-button:active {
+            transform: translateY(0);
+            box-shadow: 0 5px 10px -2px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+        }
+        .movie-card {
+            background-color: #2d3748; /* Darker card background */
+            border-radius: 0.75rem; /* Rounded corners */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            border: 1px solid #4a5568; /* Subtle border */
+        }
+        .movie-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 20px -5px rgba(0, 0, 0, 0.3), 0 6px 10px -3px rgba(0, 0, 0, 0.15);
+        }
+        .movie-card img {
+            border-top-left-radius: 0.75rem;
+            border-top-right-radius: 0.75rem;
+            object-fit: cover;
+            transition: transform 0.3s ease-in-out;
+        }
+        .movie-card:hover img {
+            transform: scale(1.05); /* Slight zoom on image hover */
+        }
+        .movie-title {
+            font-weight: 600; /* Semi-bold */
+            color: #000000 !important; /* Force black color using !important */
+            min-height: 3em; /* Ensure consistent height for titles */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            /* Added for better text display: */
+            overflow-wrap: break-word; /* Allows long words to break */
+            word-wrap: break-word;     /* Fallback for older browsers */
+            white-space: normal;       /* Ensures text wraps normally */
+            padding: 0 0.5rem;         /* Small padding to prevent text touching edges */
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.7); /* Changed text shadow to white for contrast with black text */
+        }
+        .info-text {
+            color: #cbd5e0; /* Lighter gray for info text */
+        }
+        .footer-note {
+            color: #94a3b8; /* Even lighter gray for footer note */
+            border-top-color: #4a5568; /* Darker border for footer */
+        }
+        .spinner-path {
+            stroke: #a78bfa; /* Spinner color to match header */
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="container bg-white p-8 rounded-xl shadow-lg w-full">
+        <h1 class="main-header">🎬 Movie Recommender 🍿</h1>
+
+        <p class="text-center text-gray-400 mb-8 text-lg">
+            Discover your next favorite film! Select a movie below and let our recommender do the magic.
+        </p>
+
+        <div class="mb-8">
+            <label for="movieSelect" class="block text-gray-300 text-xl font-semibold mb-3">Search for a movie:</label>
+            <select id="movieSelect"
+                    class="w-full p-4 border rounded-xl shadow-inner focus:ring-purple-500 focus:border-purple-500 text-lg">
+                <option value="" disabled selected>-- Select a movie --</option>
+                {% for movie_title in movie_titles %}
+                <option value="{{ movie_title }}">{{ movie_title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button id="recommendButton"
+                class="recommend-button block w-auto mx-auto px-10 py-4 text-white rounded-2xl focus:outline-none focus:ring-4 focus:ring-green-400 focus:ring-opacity-75">
+            Get Recommendations ✨
+        </button>
+
+        <!-- Loading indicator -->
+        <div id="loadingIndicator" class="text-center text-gray-500 mt-12 hidden">
+            <svg class="animate-spin h-10 w-10 text-purple-400 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75 spinner-path" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="mt-3 text-lg text-gray-400">Fetching cinematic insights...</p>
+        </div>
+
+        <div id="recommendationsContainer" class="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Recommended movies will be displayed here -->
+        </div>
+
+        <p class="text-center footer-note text-sm mt-12 pt-6 border-t">
+            Powered by TMDB API. Ensure your `app.py` has the correct API key and 'movie_id' data.
+        </p>
+    </div>
+
+    <script>
+        document.getElementById('recommendButton').addEventListener('click', async () => {
+            const selectElement = document.getElementById('movieSelect');
+            const selectedMovieName = selectElement.value;
+            const recommendationsContainer = document.getElementById('recommendationsContainer');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+
+            if (!selectedMovieName) {
+                // Using a simple alert for brevity, but a custom modal would be better for UX.
+                alert('Please select a movie first to get recommendations!');
+                return;
+            }
+
+            // Show loading indicator and clear previous recommendations
+            loadingIndicator.classList.remove('hidden');
+            recommendationsContainer.innerHTML = '';
+
+            try {
+                const response = await fetch('/recommend', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ movie_name: selectedMovieName })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const recommendations = await response.json();
+
+                if (recommendations.length === 0) {
+                    recommendationsContainer.innerHTML = '<p class="text-center text-gray-500 text-lg">No recommendations found for this movie. Try another one!</p>';
+                } else {
+                    recommendations.forEach((movie, index) => {
+                        // Define PLACEHOLDER_IMAGE_URL in JS for onerror fallback
+                        const PLACEHOLDER_IMAGE_URL = "https://placehold.co/500x750/333333/dddddd?text=No+Poster"; // Darker placeholder
+
+                        const movieCard = `
+                            <div class="movie-card bg-white rounded-lg shadow-md overflow-hidden">
+                                <div class="w-full relative aspect-[2/3]"> <!-- Ensures 2:3 aspect ratio for movie posters -->
+                                    <img src="${movie.poster_url}" alt="${movie.title} poster"
+                                         onerror="this.onerror=null;this.src='${PLACEHOLDER_IMAGE_URL}'"
+                                         class="absolute inset-0 w-full h-full object-cover">
+                                </div>
+                                <div class="p-4 flex items-center justify-center min-h-[4rem]">
+                                    <h3 class="movie-title text-xl font-semibold">
+                                        ${index + 1}. ${movie.title}
+                                    </h3>
+                                </div>
+                            </div>
+                        `;
+                        recommendationsContainer.innerHTML += movieCard;
+                    });
+                }
+
+            } catch (error) {
+                console.error('Error fetching recommendations:', error);
+                recommendationsContainer.innerHTML = '<p class="text-center text-red-400 text-lg">Failed to fetch recommendations. Please try again later.</p>';
+            } finally {
+                // Hide loading indicator
+                loadingIndicator.classList.add('hidden');
+            }
+        });
+
+        // Define PLACEHOLDER_IMAGE_URL globally in JS for onerror fallback
+        const PLACEHOLDER_IMAGE_URL = "https://placehold.co/500x750/333333/dddddd?text=No+Poster";
+    </script>
+</body>
+</html>
